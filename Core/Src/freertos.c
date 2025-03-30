@@ -39,7 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define abs(x) ((x)>0?(x):-(x))
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,8 +52,8 @@
 extern union Vofa_Pid kp,ki,kd,Target;
 int16_t TIM3_CNT,TIM4_CNT;
 float L_RPM,R_RPM;
-PID L_pid,R_pid;
-float Target_RPM ;
+PID L_pid_Speed,R_pid_Speed,L_pid_Angle,R_pid_Angle;
+float R_Target_RPM,L_Target_RPM,Target_RPM;
 float roll,pitch,yaw;
 /* USER CODE END Variables */
 osThreadId DebugTaskHandle;
@@ -180,28 +180,38 @@ void StartDebug(void const * argument)
 void StartMotorCtrl(void const * argument)
 {
   /* USER CODE BEGIN StartMotorCtrl */
-	PID_parameter_init(&L_pid,15,2.5,3,10000,5000,0);
-	PID_parameter_init(&R_pid,15,2.5,3,10000,5000,0);
+	PID_parameter_init(&L_pid_Speed,15,2.5,3,10000,5000,0);
+	PID_parameter_init(&R_pid_Speed,15,2.5,3,10000,5000,0);
+  PID_parameter_init(&L_pid_Angle,0,0,0,800,500,0);
+  PID_parameter_init(&R_pid_Angle,0,0,0,800,500,0);
 	TickType_t preTime = xTaskGetTickCount();
   /* Infinite loop */
   for(;;)
   {		
-	  
-	  xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
-	  //float error = Target_RPM-R_RPM;
+    xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
 	  if(kp.Pid_Data!=0||ki.Pid_Data!=0||kd.Pid_Data!=0){
-		PID_reset_PID(&R_pid,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
+		PID_reset_PID(&R_pid_Speed,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
 	  }
-	  
-    PID_incremental_PID_calculation(&R_pid,R_RPM,Target.Pid_Data);
-	  float output=R_pid.output;
+    PID_position_PID_calculation_by_error(&R_pid_Angle,pitch);
+    Target_RPM = R_pid_Angle.output;
+	  if(Target_RPM>0){
+      PID_incremental_PID_calculation(&R_pid_Speed,R_RPM,Target_RPM);
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_10,GPIO_PIN_SET);
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOB,GPIO_PIN_3,GPIO_PIN_SET);
+      HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
+    }
+    else if(Target_RPM<0){
+      PID_incremental_PID_calculation(&R_pid_Speed,R_RPM,-Target_RPM);
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_10,GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
+      HAL_GPIO_WritePin(GPIOB,GPIO_PIN_3,GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_SET);
+    }
+    float output = R_pid_Speed.output;
+    __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,output);
 	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,output);
 	  xSemaphoreGive(Encoder_MutexHandle);
-//		OLED_ShowNum(1,5,output,5);
-//		OLED_ShowNum(1,12,R_RPM,5);	  
-//	  OLED_ShowNum(2,12,Target_RPM,5);	
-//		OLED_ShowNum(2,1,R_pid.Proportion,5);
-	  
 	  osDelayUntil(&preTime,pdMS_TO_TICKS(4));
   }
   
@@ -237,8 +247,6 @@ void StartRPMGet(void const * argument)
 	  
 	  L_RPM = (float)TIM3_CNT/52/20*1000/3*60.0f;
     R_RPM = (float)TIM4_CNT/52/20*1000/3*60.0f;
-	 
-	  Target_RPM = Target.Pid_Data;
 	  // Vofa_SendFloat(Target_RPM);
 	  // Vofa_SendFloat(R_RPM);
 	  // Vofa_Tail();
@@ -285,4 +293,3 @@ void StartVofa(void const * argument)
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
-

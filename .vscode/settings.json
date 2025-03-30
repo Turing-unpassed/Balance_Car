@@ -7,6 +7,8 @@
         "oled.h": "c",
         "main.h": "c",
         "task.h": "c",
-        "tim.h": "c"
+        "tim.h": "c",
+        "cmsis_os.h": "c",
+        "gpio.h": "c"
     }
 }
