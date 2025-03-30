@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "mpu6050.h": "c",
+        "freertos.h": "c",
+        "inv_mpu.h": "c",
+        "i2c.h": "c",
+        "oled.h": "c",
+        "main.h": "c",
+        "task.h": "c",
+        "tim.h": "c"
+    }
+}
