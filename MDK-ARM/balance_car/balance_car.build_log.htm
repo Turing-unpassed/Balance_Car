@@ -22,15 +22,25 @@ Dialog DLL:      TCM.DLL V1.56.4.0
  
 <h2>Project:</h2>
 D:\GDUT-9th\balance_car\MDK-ARM\balance_car.uvprojx
-Project File Date:  03/30/2025
+Project File Date:  03/31/2025
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 5 (build 528)', folder: 'D:\keil5\ARM\ARMCC\Bin'
 Build target 'balance_car'
+compiling freertos.c...
+../Core/Inc/vofa.h(20): warning:  #1295-D: Deprecated declaration Vofa_Tail - give arg types
+  void Vofa_Tail();
+../Core/Inc/vofa.h(22): warning:  #1295-D: Deprecated declaration StartUartReceiveIT - give arg types
+  void StartUartReceiveIT();
+../Core/Src/freertos.c(262): warning:  #550-D: variable "l_rpm"  was set but never used
+  	float l_rpm;
+../Core/Src/freertos.c(263): warning:  #177-D: variable "target_rpm"  was declared but never referenced
+  	float target_rpm; 
+../Core/Src/freertos.c: 4 warnings, 0 errors
 linking...
-Program Size: Code=33178 RO-data=5386 RW-data=244 ZI-data=6124  
+Program Size: Code=33686 RO-data=5382 RW-data=248 ZI-data=6184  
 FromELF: creating hex file...
-"balance_car\balance_car.axf" - 0 Error(s), 0 Warning(s).
+"balance_car\balance_car.axf" - 0 Error(s), 4 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -54,7 +64,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE@6.1.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:00
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>

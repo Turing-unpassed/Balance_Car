@@ -9,6 +9,8 @@
         "task.h": "c",
         "tim.h": "c",
         "cmsis_os.h": "c",
-        "gpio.h": "c"
+        "gpio.h": "c",
+        "usart.h": "c",
+        "vofa.h": "c"
     }
 }

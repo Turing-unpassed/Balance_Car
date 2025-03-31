@@ -39,7 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define abs(x) ((x)>0?(x):-(x))
+#define aabs(x) ((x)>0?(x):-(x))
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,15 +52,16 @@
 extern union Vofa_Pid kp,ki,kd,Target;
 int16_t TIM3_CNT,TIM4_CNT;
 float L_RPM,R_RPM;
-PID L_pid_Speed,R_pid_Speed,L_pid_Angle,R_pid_Angle;
+PID L_pid_Speed,R_pid_Speed,L_pid_Angle,R_pid_Angle,Pid_Angle;
 float R_Target_RPM,L_Target_RPM,Target_RPM;
-float roll,pitch,yaw;
+float Roll,Pitch,Yaw;
 /* USER CODE END Variables */
 osThreadId DebugTaskHandle;
 osThreadId MotorCtrlTaskHandle;
 osThreadId RPMGetTaskHandle;
 osThreadId Vofa_TaskHandle;
 osMutexId Encoder_MutexHandle;
+osMutexId Ora_MutexHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -103,6 +104,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of Encoder_Mutex */
   osMutexDef(Encoder_Mutex);
   Encoder_MutexHandle = osMutexCreate(osMutex(Encoder_Mutex));
+
+  /* definition and creation of Ora_Mutex */
+  osMutexDef(Ora_Mutex);
+  Ora_MutexHandle = osMutexCreate(osMutex(Ora_Mutex));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -153,17 +158,23 @@ void MX_FREERTOS_Init(void) {
 void StartDebug(void const * argument)
 {
   /* USER CODE BEGIN StartDebug */
+  float pitch, roll, yaw;
   /* Infinite loop */
   for(;;)
   {
-    MPU6050_DMP_Get_Date(&pitch, &roll, &yaw);
-    // OLED_ShowSignedNum(1,1,pitch,5); 
-    // OLED_ShowSignedNum(2,1,roll,5);
-    // OLED_ShowSignedNum(3,1,yaw,5);
-    Vofa_SendFloat(roll);
-    Vofa_SendFloat(pitch);
-    Vofa_SendFloat(yaw);
-    Vofa_Tail();
+    xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
+    MPU6050_DMP_Get_Date(&Pitch, &Roll, &Yaw);
+    pitch = Pitch;
+    roll = Roll;  
+    yaw = Yaw;
+    xSemaphoreGive(Ora_MutexHandle);
+    OLED_ShowSignedNum(1,1,pitch,5); 
+    OLED_ShowSignedNum(2,1,roll,5);
+    OLED_ShowSignedNum(3,1,yaw,5);
+//    Vofa_SendFloat(roll);
+//    Vofa_SendFloat(pitch);
+//    Vofa_SendFloat(yaw);
+//    Vofa_Tail();
     osDelay(1);
   }
   /* USER CODE END StartDebug */
@@ -176,42 +187,61 @@ void StartDebug(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartMotorCtrl */
-
 void StartMotorCtrl(void const * argument)
 {
   /* USER CODE BEGIN StartMotorCtrl */
-	PID_parameter_init(&L_pid_Speed,15,2.5,3,10000,5000,0);
-	PID_parameter_init(&R_pid_Speed,15,2.5,3,10000,5000,0);
-  PID_parameter_init(&L_pid_Angle,0,0,0,800,500,0);
-  PID_parameter_init(&R_pid_Angle,0,0,0,800,500,0);
+  float r_rpm,l_rpm,pitch,r_output,l_output;
+	PID_parameter_init(&L_pid_Speed,30,4.3,0.5,10000,5000,0);
+	PID_parameter_init(&R_pid_Speed,30,4.3,0.5,10000,5000,0);
+  PID_parameter_init(&Pid_Angle,0,0,0,800,500,0);
+  //PID_parameter_init(&R_pid_Angle,0,0,0,800,500,0);
+  
 	TickType_t preTime = xTaskGetTickCount();
   /* Infinite loop */
   for(;;)
   {		
+
     xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
+    r_rpm = R_RPM;
+    l_rpm = L_RPM;
+    xSemaphoreGive(Encoder_MutexHandle);
+
+    xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
+    pitch = Pitch;
+    xSemaphoreGive(Ora_MutexHandle);
+
 	  if(kp.Pid_Data!=0||ki.Pid_Data!=0||kd.Pid_Data!=0){
 		PID_reset_PID(&R_pid_Speed,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
 	  }
-    PID_position_PID_calculation_by_error(&R_pid_Angle,pitch);
-    Target_RPM = R_pid_Angle.output;
-	  if(Target_RPM>0){
-      PID_incremental_PID_calculation(&R_pid_Speed,R_RPM,Target_RPM);
-      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_10,GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOB,GPIO_PIN_3,GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
+    PID_position_PID_calculation_by_error(&Pid_Angle,pitch);
+    //Target_RPM = Pid_Angle.output;
+    Target_RPM = Target.Pid_Data;
+    PID_incremental_PID_calculation(&R_pid_Speed,r_rpm,Target_RPM);
+    PID_incremental_PID_calculation(&L_pid_Speed,l_rpm,Target_RPM);
+	  if(R_pid_Speed.output>0){
+		 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_3,GPIO_PIN_SET);
+		 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
+		 r_output = R_pid_Speed.output;
     }
-    else if(Target_RPM<0){
-      PID_incremental_PID_calculation(&R_pid_Speed,R_RPM,-Target_RPM);
-      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_10,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
+    else if(R_pid_Speed.output<0){
       HAL_GPIO_WritePin(GPIOB,GPIO_PIN_3,GPIO_PIN_RESET);
       HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_SET);
+	  r_output = -R_pid_Speed.output;
     }
-    float output = R_pid_Speed.output;
-    __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,output);
-	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,output);
-	  xSemaphoreGive(Encoder_MutexHandle);
+    if(L_pid_Speed.output>0){
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_10,GPIO_PIN_SET);
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
+	  l_output = L_pid_Speed.output;
+    }
+    else if(L_pid_Speed.output<0){
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_10,GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
+	  l_output = -L_pid_Speed.output;
+    }
+	
+    __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,l_output);
+	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,r_output);
+
 	  osDelayUntil(&preTime,pdMS_TO_TICKS(4));
   }
   
@@ -225,33 +255,31 @@ void StartMotorCtrl(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartRPMGet */
-
 void StartRPMGet(void const * argument)
 {
   /* USER CODE BEGIN StartRPMGet */
-	//OLED_ShowString(1,1,"CNT:");
-	
-	
+	float r_rpm;
+	float l_rpm;
+	float target_rpm; 
+	StartUartReceiveIT();
 	TickType_t preTime=xTaskGetTickCount();
   /* Infinite loop */
   for(;;)
   {
 
 	  xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
-	  
 	  TIM3_CNT = __HAL_TIM_GetCounter(&htim3); 
 	  TIM4_CNT = __HAL_TIM_GetCounter(&htim4);
-	  
 	  __HAL_TIM_SetCounter(&htim3,0);
 	  __HAL_TIM_SetCounter(&htim4,0);
-	  
 	  L_RPM = (float)TIM3_CNT/52/20*1000/3*60.0f;
     R_RPM = (float)TIM4_CNT/52/20*1000/3*60.0f;
-	  // Vofa_SendFloat(Target_RPM);
-	  // Vofa_SendFloat(R_RPM);
-	  // Vofa_Tail();
+	  r_rpm = R_RPM;
+	  l_rpm = L_RPM;
 	  xSemaphoreGive(Encoder_MutexHandle);
-	  
+	  Vofa_SendFloat(Target.Pid_Data);
+	  Vofa_SendFloat(r_rpm);
+	  Vofa_Tail();
 	  osDelayUntil(&preTime,pdMS_TO_TICKS(3));
 	 
   }
@@ -269,8 +297,6 @@ void StartRPMGet(void const * argument)
 void StartVofa(void const * argument)
 {
   /* USER CODE BEGIN StartVofa */
-	
-	StartUartReceiveIT();
   /* Infinite loop */
   for(;;)
   {	
@@ -293,3 +319,4 @@ void StartVofa(void const * argument)
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
+
