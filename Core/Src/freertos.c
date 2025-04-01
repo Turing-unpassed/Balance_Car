@@ -187,6 +187,7 @@ void StartDebug(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartMotorCtrl */
+TickType_t time1,time2;
 void StartMotorCtrl(void const * argument)
 {
   /* USER CODE BEGIN StartMotorCtrl */
@@ -195,12 +196,12 @@ void StartMotorCtrl(void const * argument)
 	PID_parameter_init(&R_pid_Speed,30,4.3,0.5,10000,5000,0);
   PID_parameter_init(&Pid_Angle,0,0,0,800,500,0);
   //PID_parameter_init(&R_pid_Angle,0,0,0,800,500,0);
-  
+  Target_RPM = 0;
 	TickType_t preTime = xTaskGetTickCount();
   /* Infinite loop */
   for(;;)
   {		
-
+    
     xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
     r_rpm = R_RPM;
     l_rpm = L_RPM;
@@ -209,15 +210,14 @@ void StartMotorCtrl(void const * argument)
     xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
     pitch = Pitch;
     xSemaphoreGive(Ora_MutexHandle);
-
+	
 	  if(kp.Pid_Data!=0||ki.Pid_Data!=0||kd.Pid_Data!=0){
-		PID_reset_PID(&R_pid_Speed,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
+		  PID_reset_PID(&Pid_Angle,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
 	  }
     PID_position_PID_calculation_by_error(&Pid_Angle,pitch);
-    //Target_RPM = Pid_Angle.output;
-    Target_RPM = Target.Pid_Data;
-    PID_incremental_PID_calculation(&R_pid_Speed,r_rpm,Target_RPM);
-    PID_incremental_PID_calculation(&L_pid_Speed,l_rpm,Target_RPM);
+
+    PID_incremental_PID_calculation(&R_pid_Speed,r_rpm,Target_RPM+Pid_Angle.output);
+    PID_incremental_PID_calculation(&L_pid_Speed,l_rpm,Target_RPM+Pid_Angle.output);
 	  if(R_pid_Speed.output>0){
 		 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_3,GPIO_PIN_SET);
 		 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
@@ -241,7 +241,7 @@ void StartMotorCtrl(void const * argument)
 	
     __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,l_output);
 	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,r_output);
-
+    
 	  osDelayUntil(&preTime,pdMS_TO_TICKS(4));
   }
   
@@ -266,7 +266,7 @@ void StartRPMGet(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-
+		
 	  xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
 	  TIM3_CNT = __HAL_TIM_GetCounter(&htim3); 
 	  TIM4_CNT = __HAL_TIM_GetCounter(&htim4);
@@ -277,9 +277,10 @@ void StartRPMGet(void const * argument)
 	  r_rpm = R_RPM;
 	  l_rpm = L_RPM;
 	  xSemaphoreGive(Encoder_MutexHandle);
-	  Vofa_SendFloat(Target.Pid_Data);
-	  Vofa_SendFloat(r_rpm);
-	  Vofa_Tail();
+//	   Vofa_SendFloat(Target.Pid_Data);
+//	   Vofa_SendFloat(r_rpm);
+//	   Vofa_Tail();
+	  
 	  osDelayUntil(&preTime,pdMS_TO_TICKS(3));
 	 
   }
