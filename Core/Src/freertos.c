@@ -164,7 +164,7 @@ void StartDebug(void const * argument)
   {
     xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
     MPU6050_DMP_Get_Date(&Pitch, &Roll, &Yaw);
-    pitch = Pitch;
+    pitch = -Pitch;
     roll = Roll;  
     yaw = Yaw;
     xSemaphoreGive(Ora_MutexHandle);
@@ -191,31 +191,34 @@ TickType_t time1,time2;
 void StartMotorCtrl(void const * argument)
 {
   /* USER CODE BEGIN StartMotorCtrl */
-  float r_rpm,l_rpm,pitch,r_output,l_output;
+  float r_rpm,l_rpm,r_output,l_output;
+	float pitch,roll,yaw;
 	PID_parameter_init(&L_pid_Speed,30,4.3,0.5,10000,5000,0);
 	PID_parameter_init(&R_pid_Speed,30,4.3,0.5,10000,5000,0);
-  PID_parameter_init(&Pid_Angle,0,0,0,800,500,0);
+  PID_parameter_init(&Pid_Angle,0,0,0,50,20,0);
   //PID_parameter_init(&R_pid_Angle,0,0,0,800,500,0);
   Target_RPM = 0;
 	TickType_t preTime = xTaskGetTickCount();
   /* Infinite loop */
   for(;;)
   {		
-    
+     
     xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
     r_rpm = R_RPM;
     l_rpm = L_RPM;
     xSemaphoreGive(Encoder_MutexHandle);
 
     xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
-    pitch = Pitch;
+    pitch = -Pitch;
+	roll = Roll;  
+    yaw = Yaw;
     xSemaphoreGive(Ora_MutexHandle);
 	
 	  if(kp.Pid_Data!=0||ki.Pid_Data!=0||kd.Pid_Data!=0){
 		  PID_reset_PID(&Pid_Angle,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
 	  }
     PID_position_PID_calculation_by_error(&Pid_Angle,pitch);
-
+	Target_RPM=Target.Pid_Data;
     PID_incremental_PID_calculation(&R_pid_Speed,r_rpm,Target_RPM+Pid_Angle.output);
     PID_incremental_PID_calculation(&L_pid_Speed,l_rpm,Target_RPM+Pid_Angle.output);
 	  if(R_pid_Speed.output>0){
@@ -241,8 +244,13 @@ void StartMotorCtrl(void const * argument)
 	
     __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,l_output);
 	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,r_output);
-    
-	  osDelayUntil(&preTime,pdMS_TO_TICKS(4));
+     //Vofa_SendFloat(roll);
+	Vofa_SendFloat(pitch);
+	//Vofa_SendFloat(yaw);
+	Vofa_Tail();
+	
+	
+	  osDelayUntil(&preTime,pdMS_TO_TICKS(8));
   }
   
   /* USER CODE END StartMotorCtrl */
@@ -266,22 +274,23 @@ void StartRPMGet(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-		
+		//time1 = xTaskGetTickCount();
 	  xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
 	  TIM3_CNT = __HAL_TIM_GetCounter(&htim3); 
 	  TIM4_CNT = __HAL_TIM_GetCounter(&htim4);
 	  __HAL_TIM_SetCounter(&htim3,0);
 	  __HAL_TIM_SetCounter(&htim4,0);
-	  L_RPM = (float)TIM3_CNT/52/20*1000/3*60.0f;
-    R_RPM = (float)TIM4_CNT/52/20*1000/3*60.0f;
+	  L_RPM = -(float)TIM3_CNT/52/20*1000/6*60.0f;
+    R_RPM = (float)TIM4_CNT/52/20*1000/6*60.0f;
 	  r_rpm = R_RPM;
 	  l_rpm = L_RPM;
 	  xSemaphoreGive(Encoder_MutexHandle);
-//	   Vofa_SendFloat(Target.Pid_Data);
-//	   Vofa_SendFloat(r_rpm);
-//	   Vofa_Tail();
-	  
-	  osDelayUntil(&preTime,pdMS_TO_TICKS(3));
+	   Vofa_SendFloat(Target.Pid_Data);
+	   Vofa_SendFloat(r_rpm);
+	  Vofa_SendFloat(l_rpm);
+	   Vofa_Tail();
+	 // time2 = xTaskGetTickCount()-time1;
+	  osDelayUntil(&preTime,pdMS_TO_TICKS(6));
 	 
   }
   
