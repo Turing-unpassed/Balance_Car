@@ -154,6 +154,7 @@ void MX_FREERTOS_Init(void) {
   * @param  argument: Not used
   * @retval None
   */
+TickType_t time1,time2;
 /* USER CODE END Header_StartDebug */
 void StartDebug(void const * argument)
 {
@@ -162,15 +163,17 @@ void StartDebug(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
+	  time1 = xTaskGetTickCount();
+    //xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
     MPU6050_DMP_Get_Date(&Pitch, &Roll, &Yaw);
     pitch = -Pitch;
     roll = Roll;  
     yaw = Yaw;
-    xSemaphoreGive(Ora_MutexHandle);
-    OLED_ShowSignedNum(1,1,pitch,5); 
-    OLED_ShowSignedNum(2,1,roll,5);
-    OLED_ShowSignedNum(3,1,yaw,5);
+	  time2 = xTaskGetTickCount()-time1;
+    //xSemaphoreGive(Ora_MutexHandle);
+//    OLED_ShowSignedNum(1,1,pitch,5); 
+//    OLED_ShowSignedNum(2,1,roll,5);
+//    OLED_ShowSignedNum(3,1,yaw,5);
 //    Vofa_SendFloat(roll);
 //    Vofa_SendFloat(pitch);
 //    Vofa_SendFloat(yaw);
@@ -187,32 +190,32 @@ void StartDebug(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartMotorCtrl */
-TickType_t time1,time2;
 void StartMotorCtrl(void const * argument)
 {
   /* USER CODE BEGIN StartMotorCtrl */
+	StartUartReceiveIT();
   float r_rpm,l_rpm,r_output,l_output;
 	float pitch,roll,yaw;
-	PID_parameter_init(&L_pid_Speed,30,4.3,0.5,10000,5000,0);
-	PID_parameter_init(&R_pid_Speed,30,4.3,0.5,10000,5000,0);
-  PID_parameter_init(&Pid_Angle,0,0,0,50,20,0);
-  //PID_parameter_init(&R_pid_Angle,0,0,0,800,500,0);
+	PID_parameter_init(&L_pid_Speed,30,4,0.5,10000,5000,0);
+	PID_parameter_init(&R_pid_Speed,30,4,0.5,10000,5000,0);
+  PID_parameter_init(&Pid_Angle,5,0,10,800,20,0);
+  
   Target_RPM = 0;
 	TickType_t preTime = xTaskGetTickCount();
   /* Infinite loop */
   for(;;)
   {		
      
-    xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
+    //xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
     r_rpm = R_RPM;
     l_rpm = L_RPM;
-    xSemaphoreGive(Encoder_MutexHandle);
+    //xSemaphoreGive(Encoder_MutexHandle);
 
-    xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
+    //xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
     pitch = -Pitch;
 	roll = Roll;  
     yaw = Yaw;
-    xSemaphoreGive(Ora_MutexHandle);
+    //xSemaphoreGive(Ora_MutexHandle);
 	
 	  if(kp.Pid_Data!=0||ki.Pid_Data!=0||kd.Pid_Data!=0){
 		  PID_reset_PID(&Pid_Angle,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
@@ -244,13 +247,12 @@ void StartMotorCtrl(void const * argument)
 	
     __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,l_output);
 	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,r_output);
-     //Vofa_SendFloat(roll);
+     
 	Vofa_SendFloat(pitch);
-	//Vofa_SendFloat(yaw);
+	Vofa_SendFloat(0);
 	Vofa_Tail();
 	
-	
-	  osDelayUntil(&preTime,pdMS_TO_TICKS(8));
+	  osDelayUntil(&preTime,pdMS_TO_TICKS(4));
   }
   
   /* USER CODE END StartMotorCtrl */
@@ -269,28 +271,28 @@ void StartRPMGet(void const * argument)
 	float r_rpm;
 	float l_rpm;
 	float target_rpm; 
-	StartUartReceiveIT();
+	
 	TickType_t preTime=xTaskGetTickCount();
   /* Infinite loop */
   for(;;)
   {
-		//time1 = xTaskGetTickCount();
-	  xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
+		
+	  //xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
 	  TIM3_CNT = __HAL_TIM_GetCounter(&htim3); 
 	  TIM4_CNT = __HAL_TIM_GetCounter(&htim4);
 	  __HAL_TIM_SetCounter(&htim3,0);
 	  __HAL_TIM_SetCounter(&htim4,0);
-	  L_RPM = -(float)TIM3_CNT/52/20*1000/6*60.0f;
-    R_RPM = (float)TIM4_CNT/52/20*1000/6*60.0f;
+	  L_RPM = -(float)TIM3_CNT/52/20*1000/3*60.0f;
+    R_RPM = (float)TIM4_CNT/52/20*1000/3*60.0f;
 	  r_rpm = R_RPM;
 	  l_rpm = L_RPM;
-	  xSemaphoreGive(Encoder_MutexHandle);
-	   Vofa_SendFloat(Target.Pid_Data);
-	   Vofa_SendFloat(r_rpm);
-	  Vofa_SendFloat(l_rpm);
-	   Vofa_Tail();
-	 // time2 = xTaskGetTickCount()-time1;
-	  osDelayUntil(&preTime,pdMS_TO_TICKS(6));
+	  //xSemaphoreGive(Encoder_MutexHandle);
+//	   Vofa_SendFloat(Target.Pid_Data);
+//	   Vofa_SendFloat(r_rpm);
+//	  Vofa_SendFloat(l_rpm);
+//	   Vofa_Tail();
+	  
+	  osDelayUntil(&preTime,pdMS_TO_TICKS(3));
 	 
   }
   
