@@ -60,8 +60,6 @@ float Roll,Pitch,Yaw;
 osThreadId DebugTaskHandle;
 osThreadId MotorCtrlTaskHandle;
 osThreadId RPMGetTaskHandle;
-osMutexId Encoder_MutexHandle;
-osMutexId Ora_MutexHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -99,14 +97,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
-  /* Create the mutex(es) */
-  /* definition and creation of Encoder_Mutex */
-  osMutexDef(Encoder_Mutex);
-  Encoder_MutexHandle = osMutexCreate(osMutex(Encoder_Mutex));
-
-  /* definition and creation of Ora_Mutex */
-  osMutexDef(Ora_Mutex);
-  Ora_MutexHandle = osMutexCreate(osMutex(Ora_Mutex));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -126,7 +116,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of DebugTask */
-  osThreadDef(DebugTask, StartDebug, osPriorityNormal, 0, 256);
+  osThreadDef(DebugTask, StartDebug, osPriorityNormal, 0, 128);
   DebugTaskHandle = osThreadCreate(osThread(DebugTask), NULL);
 
   /* definition and creation of MotorCtrlTask */
