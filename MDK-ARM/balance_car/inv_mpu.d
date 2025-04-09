@@ -1,10 +1,10 @@
-balance_car\inv_mpu.o: ..\Core\Src\inv_mpu.c
+balance_car\inv_mpu.o: ..\Hardware_L\inv_mpu.c
 balance_car\inv_mpu.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdio.h
 balance_car\inv_mpu.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdint.h
 balance_car\inv_mpu.o: D:\keil5\ARM\ARMCC\Bin\..\include\stdlib.h
 balance_car\inv_mpu.o: D:\keil5\ARM\ARMCC\Bin\..\include\string.h
 balance_car\inv_mpu.o: D:\keil5\ARM\ARMCC\Bin\..\include\math.h
-balance_car\inv_mpu.o: ../Core/Inc/inv_mpu.h
+balance_car\inv_mpu.o: ..\Hardware_L\inv_mpu.h
 balance_car\inv_mpu.o: ../Core/Inc/main.h
 balance_car\inv_mpu.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 balance_car\inv_mpu.o: ../Core/Inc/stm32f1xx_hal_conf.h
