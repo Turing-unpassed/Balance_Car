@@ -48,4 +48,4 @@ balance_car\main.o: ../Core/Inc/tim.h
 balance_car\main.o: ../Core/Inc/usart.h
 balance_car\main.o: ../Core/Inc/gpio.h
 balance_car\main.o: ../Core/Inc/oled.h
-balance_car\main.o: ..\Hardware_L\mpu6050.h
+balance_car\main.o: ../Hardware_L/mpu6050.h

@@ -25,7 +25,7 @@ void PID_incremental_PID_calculation(PID *pp, float CurrentPoint, float NextPoin
 
 	
 	pp->Error =  NextPoint - CurrentPoint; 
-	if(fabs(pp->Error) < pp->deadzone)
+	if(fabsf(pp->Error) < pp->deadzone)
 		{
 			pp->Error = 0;
 		}	
@@ -58,19 +58,43 @@ void PID_position_PID_calculation_by_error(PID *pp, float error)
 {   
 
 	
-	if(fabs(error) < pp->deadzone)
+	if(fabsf(error) < pp->deadzone)
 	{
 		error = 0;
 	}
-	
-	pp->Error =  error;          
-	pp->SumError += pp->Error;                      
+	pp->LastError = pp->Error;
+	pp->Error = error;
+	if(fabsf(pp->Error)>1){
+		if(pp->SumError > 800){
+			if(pp->Error<0){
+				pp->SumError += pp->Error;
+			}
+		}else if(pp->SumError < -800){
+			if(pp->Error>0){
+				pp->SumError += pp->Error;
+			}
+		}else{
+			pp->SumError += pp->Error;
+		}         
+//		if(pp->iout>=1000){	
+//			if(pp->Error<0){
+//				pp->SumError += pp->Error;
+//			}
+//		}else if(pp->iout<=-1000){
+//			if(pp->Error>0){
+//				pp->SumError += pp->Error;
+//			}
+//		}else{
+//			pp->SumError += pp->Error;
+//		}
+	}
+	          
 	pp->DError = pp->Error - pp->LastError;
 	
 	pp->pout = pp->Proportion * pp->Error;
-	pp->iout = pp->Integral * pp->SumError;
-	pp->dout = pp->Derivative * pp->DError ;  
-	
+	pp->iout = pp->Integral * pp->SumError;	
+	pp->dout = pp->Derivative * pp->DError; 
+
 	if(pp->iout>pp->Integralmax){
 		pp->iout=pp->Integralmax ;
 	}else if(pp->iout< -(pp->Integralmax)){
@@ -82,7 +106,7 @@ void PID_position_PID_calculation_by_error(PID *pp, float error)
 
 	if(pp->output > pp->outputmax )  pp->output = pp->outputmax;
 	if(pp->output < - pp->outputmax )  pp->output = -pp->outputmax; 
-	pp->LastError = pp->Error;
+	
 	
 	
 }

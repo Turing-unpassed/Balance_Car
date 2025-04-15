@@ -46,7 +46,8 @@ balance_car\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event
 balance_car\freertos.o: ../Core/Inc/pid.h
 balance_car\freertos.o: ../Core/Inc/vofa.h
 balance_car\freertos.o: ../Core/Inc/usart.h
-balance_car\freertos.o: ..\Hardware_L\mpu6050.h
-balance_car\freertos.o: ..\Hardware_L\inv_mpu.h
+balance_car\freertos.o: ../Hardware_L/mpu6050.h
+balance_car\freertos.o: ../Hardware_L/inv_mpu.h
 balance_car\freertos.o: ../Core/Inc/tim.h
 balance_car\freertos.o: ../Core/Inc/oled.h
+balance_car\freertos.o: D:\keil5\ARM\ARMCC\Bin\..\include\math.h

@@ -12,6 +12,7 @@
         "gpio.h": "c",
         "usart.h": "c",
         "vofa.h": "c",
-        "pid.h": "c"
+        "pid.h": "c",
+        "math.h": "c"
     }
 }
