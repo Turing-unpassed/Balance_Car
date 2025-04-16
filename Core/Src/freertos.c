@@ -160,34 +160,26 @@ void StartDebug(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	 //time1 = xTaskGetTickCount(); 
+	
     //xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
     if(MPU6050_DMP_Get_Date(&Pitch, &Roll, &Yaw)==0){
 		pitch = -Pitch;
 		roll = Roll;  
 		yaw = Yaw;
 	}
-	if(mpu_get_gyro_reg(Gyro,NULL)==0){
-		Gyro_y = Gyro[1];
-		Gyro_x = Gyro[0];
-		Gyro_z = Gyro[2];
-	}  
-	//time2 = xTaskGetTickCount()-time1;
+//	if(mpu_get_gyro_reg(Gyro,NULL)==0){
+//		Gyro_y = Gyro[1];
+//		Gyro_x = Gyro[0];
+//		Gyro_z = Gyro[2];
+//	}  
+	
 //	if(mpu_dmp_get_data(&Pitch,&Roll,&Yaw)==0){
 //		pitch = Pitch;
 //		roll = Roll;  
 //		yaw = Yaw;
 //	}
 //    
-	  
-    //xSemaphoreGive(Ora_MutexHandle);
-//    OLED_ShowSignedNum(1,1,pitch,5); 
-//    OLED_ShowSignedNum(2,1,roll,5);
-//    OLED_ShowSignedNum(3,1,yaw,5);
-//    Vofa_SendFloat(roll);
-//    Vofa_SendFloat(pitch);
-//    Vofa_SendFloat(yaw);
-//    Vofa_Tail();
+	
     osDelay(1);
   }
   /* USER CODE END StartDebug */
@@ -209,7 +201,7 @@ void StartMotorCtrl(void const * argument)
 	
   PID_parameter_init(&L_pid_Speed,30,4,0.5,10000,5000,0);
 	PID_parameter_init(&R_pid_Speed,30,4,0.5,10000,5000,0);
-  PID_parameter_init(&Pid_Angle,15,1,60,1000,1000,0);
+  PID_parameter_init(&Pid_Angle,10,0.6,120,1000,1000,0);
   Target_RPM = 0;
 	TickType_t preTime = xTaskGetTickCount();
   /* Infinite loop */
@@ -227,14 +219,14 @@ void StartMotorCtrl(void const * argument)
     yaw = Yaw;
     //xSemaphoreGive(Ora_MutexHandle);  
 	if(kp.Pid_Data!=0||ki.Pid_Data!=0||kd.Pid_Data!=0){
-		  PID_reset_PID(&R_pid_Speed,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
+		  PID_reset_PID(&Pid_Angle,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
 	  }
-	  angle_error = pitch-0;
-	  if(fabsf(pitch)>55){
-		Pid_Angle.output = 0;
-	  }else{
-		PID_position_PID_calculation_by_error(&Pid_Angle,angle_error);
-	  }
+	angle_error = pitch-2;
+    if(fabsf(pitch)>55){
+	  Pid_Angle.output = 0;
+    }else{
+	  PID_position_PID_calculation_by_error(&Pid_Angle,angle_error);
+    }
 	//Target_RPM=Target.Pid_Data;
     PID_incremental_PID_calculation(&R_pid_Speed,r_rpm,Pid_Angle.output);
     PID_incremental_PID_calculation(&L_pid_Speed,l_rpm,Pid_Angle.output);
@@ -266,7 +258,8 @@ void StartMotorCtrl(void const * argument)
 //	Vofa_SendFloat(0);
 //	Vofa_SendFloat(r_rpm);
 //	Vofa_Tail();
-	osDelayUntil(&preTime,pdMS_TO_TICKS(4));
+	
+	osDelayUntil(&preTime,pdMS_TO_TICKS(3));
 	
   }
   
@@ -289,25 +282,25 @@ void StartRPMGet(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	  
+	   time1 = xTaskGetTickCount(); 
 	  TIM3_CNT = __HAL_TIM_GetCounter(&htim3); 
 	  TIM4_CNT = __HAL_TIM_GetCounter(&htim4);
 	  __HAL_TIM_SetCounter(&htim3,0);
 	  __HAL_TIM_SetCounter(&htim4,0);
 	  //xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
-	  L_RPM = -(float)TIM3_CNT/52/20*1000/3*60.0f;
-      R_RPM = (float)TIM4_CNT/52/20*1000/3*60.0f;
+	  L_RPM = -(float)TIM3_CNT/52/20*1000/2*60.0f;
+      R_RPM = (float)TIM4_CNT/52/20*1000/2*60.0f;
 	  l_rpm = L_RPM;
 	  r_rpm = R_RPM;
 	  //xSemaphoreGive(Encoder_MutexHandle);
-	   Vofa_SendFloat(Target.Pid_Data);
-	   Vofa_SendFloat(r_rpm);
-	  Vofa_SendFloat(l_rpm);
-	   Vofa_Tail();
+//	   Vofa_SendFloat(Target.Pid_Data);
+//	   Vofa_SendFloat(r_rpm);
+//	  Vofa_SendFloat(l_rpm);
+//	   Vofa_Tail();
 	  
 	  
- 	
-	  osDelayUntil(&preTime,pdMS_TO_TICKS(3));
+ 	 //time2 = xTaskGetTickCount()-time1;
+	  osDelayUntil(&preTime,pdMS_TO_TICKS(2));
 	 
   }
   

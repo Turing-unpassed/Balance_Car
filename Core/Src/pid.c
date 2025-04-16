@@ -65,11 +65,11 @@ void PID_position_PID_calculation_by_error(PID *pp, float error)
 	pp->LastError = pp->Error;
 	pp->Error = error;
 	if(fabsf(pp->Error)>1){
-		if(pp->SumError > 800){
+		if(pp->SumError > 1500){
 			if(pp->Error<0){
 				pp->SumError += pp->Error;
 			}
-		}else if(pp->SumError < -800){
+		}else if(pp->SumError < -1500){
 			if(pp->Error>0){
 				pp->SumError += pp->Error;
 			}
