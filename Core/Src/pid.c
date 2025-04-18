@@ -64,12 +64,12 @@ void PID_position_PID_calculation_by_error(PID *pp, float error)
 	}
 	pp->LastError = pp->Error;
 	pp->Error = error;
-	if(fabsf(pp->Error)>1){
-		if(pp->SumError > 1500){
+	if(pp->Error>1.5||pp->Error<0.9){
+		if(pp->SumError > 5000){
 			if(pp->Error<0){
 				pp->SumError += pp->Error;
 			}
-		}else if(pp->SumError < -1500){
+		}else if(pp->SumError < -5000){
 			if(pp->Error>0){
 				pp->SumError += pp->Error;
 			}
@@ -105,8 +105,46 @@ void PID_position_PID_calculation_by_error(PID *pp, float error)
 								
 
 	if(pp->output > pp->outputmax )  pp->output = pp->outputmax;
+	if(pp->output < - pp->outputmax )  pp->output = -pp->outputmax; 	
+}
+
+void Pitch_pid_calculation(PID *pp, float Target_speed, float Current_speed)
+{
+
+	pp->LastError = pp->Error;
+	pp->Error = Target_speed - Current_speed;
+	if(fabsf(pp->Error) < pp->deadzone)
+	{
+		pp->Error = 0;
+	}
+	if(fabsf(pp->Error)>0.2){
+		if(pp->SumError > 1000){
+			if(pp->Error<0){
+				pp->SumError += pp->Error;
+			}
+		}else if(pp->SumError < -1000){
+			if(pp->Error>0){
+				pp->SumError += pp->Error;
+			}
+		}else{
+			pp->SumError += pp->Error;
+		}         
+	}
+	
+	
+	pp->pout = pp->Proportion * pp->Error;
+	pp->iout = pp->Integral * pp->SumError;	
+	pp->dout = pp->Derivative * pp->DError; 
+
+	if(pp->iout>pp->Integralmax){
+		pp->iout=pp->Integralmax ;
+	}else if(pp->iout< -(pp->Integralmax)){
+		pp->iout = -(pp->Integralmax);
+	}
+	
+	pp->output =  pp->iout + pp->pout + pp->dout;
+								
+
+	if(pp->output > pp->outputmax )  pp->output = pp->outputmax;
 	if(pp->output < - pp->outputmax )  pp->output = -pp->outputmax; 
-	
-	
-	
 }

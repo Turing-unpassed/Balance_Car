@@ -32,6 +32,7 @@
 #include "tim.h"
 #include "oled.h"
 #include "math.h"
+#include "Motor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,11 +52,20 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+
+typedef enum{
+  task1 = 0,
+  task2,
+  task3,
+  task4,
+}TASK;
+
+extern Velocity_t Velocity_Data;
 extern union Vofa_Pid kp,ki,kd,Target;
 int16_t TIM3_CNT,TIM4_CNT;
-float L_RPM,R_RPM;
-PID L_pid_Speed,R_pid_Speed,L_pid_Angle,R_pid_Angle,Pid_Angle;
-float R_Target_RPM,L_Target_RPM,Target_RPM;
+float L_RPS,R_RPS;
+PID L_pid_Speed,R_pid_Speed,L_pid_Angle,R_pid_Angle,Pid_Angle,L_pitch_pid,R_pitch_pid,Pitch_pid;
+float R_Target_RPS,L_Target_RPS,Target_RPS;
 float Roll,Pitch,Yaw;
 short Gyro[3];
 short Gyro_y,Gyro_x,Gyro_z;
@@ -153,10 +163,6 @@ void StartDebug(void const * argument)
 {
   /* USER CODE BEGIN StartDebug */
   float pitch, roll, yaw;
-  
-//	while(mpu_dmp_init()){
-//		HAL_Delay(200);
-//	}
   /* Infinite loop */
   for(;;)
   {
@@ -173,13 +179,6 @@ void StartDebug(void const * argument)
 //		Gyro_z = Gyro[2];
 //	}  
 	
-//	if(mpu_dmp_get_data(&Pitch,&Roll,&Yaw)==0){
-//		pitch = Pitch;
-//		roll = Roll;  
-//		yaw = Yaw;
-//	}
-//    
-	
     osDelay(1);
   }
   /* USER CODE END StartDebug */
@@ -195,69 +194,52 @@ void StartDebug(void const * argument)
 void StartMotorCtrl(void const * argument)
 {
   /* USER CODE BEGIN StartMotorCtrl */
-	StartUartReceiveIT();
-  float r_rpm,l_rpm,r_output,l_output,angle_error;
+	StartUart2ReceiveIT();
+  float r_rps,l_rps,r_output,l_output,angle_error,Target_Speed,Target_angle;
 	float pitch,roll,yaw;
-	
-  PID_parameter_init(&L_pid_Speed,30,4,0.5,10000,5000,0);
-	PID_parameter_init(&R_pid_Speed,30,4,0.5,10000,5000,0);
-  PID_parameter_init(&Pid_Angle,10,0.6,120,1000,1000,0);
-  Target_RPM = 0;
+	PID_parameter_init(&Pitch_pid,1,0,10,20,3.3,0);
+  //PID_parameter_init(&R_pitch_pid,0,0,0,10,5,0);
+  PID_parameter_init(&L_pid_Speed,1420,100,0,10000,5000,0);
+	PID_parameter_init(&R_pid_Speed,1420,100,0,10000,5000,0);
+  PID_parameter_init(&Pid_Angle,0.25,0.003,1,15,15,0);
+  Target_RPS = 0;
 	TickType_t preTime = xTaskGetTickCount();
   /* Infinite loop */
   for(;;)
   {		
      
     //xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
-    r_rpm = R_RPM;
-    l_rpm = L_RPM;
+    r_rps = R_RPS;
+    l_rps = L_RPS;
     //xSemaphoreGive(Encoder_MutexHandle);
 
     //xSemaphoreTake(Ora_MutexHandle,portMAX_DELAY);
     pitch = -Pitch;
-	roll = Roll;  
+	roll = Roll;
     yaw = Yaw;
     //xSemaphoreGive(Ora_MutexHandle);  
-	if(kp.Pid_Data!=0||ki.Pid_Data!=0||kd.Pid_Data!=0){
-		  PID_reset_PID(&Pid_Angle,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
+    Target_Speed = 0;
+	  if(kp.Pid_Data!=0||ki.Pid_Data!=0||kd.Pid_Data!=0){
+		  PID_reset_PID(&Pitch_pid,kp.Pid_Data,ki.Pid_Data,kd.Pid_Data);
 	  }
-	angle_error = pitch-2;
+    Pitch_pid_calculation(&Pitch_pid,Target_Speed,r_rps);
+    Target_angle = Pitch_pid.output;
+    angle_error = pitch-1.2-Target_angle;
     if(fabsf(pitch)>55){
 	  Pid_Angle.output = 0;
     }else{
 	  PID_position_PID_calculation_by_error(&Pid_Angle,angle_error);
     }
-	//Target_RPM=Target.Pid_Data;
-    PID_incremental_PID_calculation(&R_pid_Speed,r_rpm,Pid_Angle.output);
-    PID_incremental_PID_calculation(&L_pid_Speed,l_rpm,Pid_Angle.output);
-	if(R_pid_Speed.output>0){
-		 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_3,GPIO_PIN_SET);
-		 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
-		 r_output = R_pid_Speed.output;
-	}
-	else if(R_pid_Speed.output<0){
-		  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_3,GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_SET);
-		  r_output = -R_pid_Speed.output;
-	}
-	 if(L_pid_Speed.output>0){
-		  HAL_GPIO_WritePin(GPIOA,GPIO_PIN_10,GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_RESET);
-		  l_output = L_pid_Speed.output;
-	}
-	else if(L_pid_Speed.output<0){
-		  HAL_GPIO_WritePin(GPIOA,GPIO_PIN_10,GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,GPIO_PIN_SET);
-		  l_output = -L_pid_Speed.output;
-	}
+    Target_RPS = Target.Pid_Data;
+    PID_incremental_PID_calculation(&R_pid_Speed,r_rps,Pid_Angle.output);
+    PID_incremental_PID_calculation(&L_pid_Speed,l_rps,Pid_Angle.output);
 	
-    __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,l_output);
-	__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,r_output);
+    Motor_Ctrol(R_pid_Speed.output,L_pid_Speed.output);
      
-//	Vofa_SendFloat(pitch);
-//	Vofa_SendFloat(0);
-//	Vofa_SendFloat(r_rpm);
-//	Vofa_Tail();
+	Vofa_SendFloat(pitch);
+	Vofa_SendFloat(0);
+	Vofa_SendFloat(r_rps);
+	Vofa_Tail();
 	
 	osDelayUntil(&preTime,pdMS_TO_TICKS(3));
 	
@@ -276,31 +258,32 @@ void StartMotorCtrl(void const * argument)
 void StartRPMGet(void const * argument)
 {
   /* USER CODE BEGIN StartRPMGet */
-	float r_rpm,l_rpm;
+	float r_rps,l_rps,a=0.7;
 	TickType_t preTime=xTaskGetTickCount();
-	
+	int Tim3_cnt_last,Tim4_cnt_last;
   /* Infinite loop */
   for(;;)
   {
-	   time1 = xTaskGetTickCount(); 
+	   //time1 = xTaskGetTickCount(); 
+	  
 	  TIM3_CNT = __HAL_TIM_GetCounter(&htim3); 
 	  TIM4_CNT = __HAL_TIM_GetCounter(&htim4);
 	  __HAL_TIM_SetCounter(&htim3,0);
 	  __HAL_TIM_SetCounter(&htim4,0);
 	  //xSemaphoreTake(Encoder_MutexHandle,portMAX_DELAY);
-	  L_RPM = -(float)TIM3_CNT/52/20*1000/2*60.0f;
-      R_RPM = (float)TIM4_CNT/52/20*1000/2*60.0f;
-	  l_rpm = L_RPM;
-	  r_rpm = R_RPM;
+	  L_RPS = -(float)TIM3_CNT/52/20*1000/3;
+    R_RPS = (float)TIM4_CNT/52/20*1000/3;
+	  l_rps = L_RPS;
+	  r_rps = R_RPS;	 
 	  //xSemaphoreGive(Encoder_MutexHandle);
 //	   Vofa_SendFloat(Target.Pid_Data);
-//	   Vofa_SendFloat(r_rpm);
-//	  Vofa_SendFloat(l_rpm);
+//	   Vofa_SendFloat(r_rps);
+//	  Vofa_SendFloat(l_rps);
 //	   Vofa_Tail();
 	  
-	  
  	 //time2 = xTaskGetTickCount()-time1;
-	  osDelayUntil(&preTime,pdMS_TO_TICKS(2));
+
+	  osDelayUntil(&preTime,pdMS_TO_TICKS(3));
 	 
   }
   

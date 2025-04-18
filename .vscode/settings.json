@@ -16,6 +16,9 @@
         "math.h": "c",
         "stdint.h": "c",
         "stdbool.h": "c",
-        "stm32f1xx_hal_def.h": "c"
+        "stm32f1xx_hal_def.h": "c",
+        "tracking.h": "c",
+        "motor.h": "c",
+        "hc_05.h": "c"
     }
 }

@@ -1,8 +1,8 @@
 #include "vofa.h"
 #include "pid.h"
 
-
-uint8_t RxBuffer;
+extern Uart1_RxBuffer;
+uint8_t Uart2_RxBuffer;
 uint8_t i=0;
 union Vofa_Pid kp,ki,kd,Target;
 uint8_t id;
@@ -20,8 +20,8 @@ void Vofa_SendFloat(float param){
 	HAL_UART_Transmit(&huart2,buffer,sizeof(float),HAL_MAX_DELAY);
 }
 
-void StartUartReceiveIT(){
-	HAL_UART_Receive_IT(&huart2,&RxBuffer,1);
+void StartUart2ReceiveIT(){
+	HAL_UART_Receive_IT(&huart2,&Uart2_RxBuffer,1);
 }
 
 void Vofa_Handle_Receive(uint8_t buffer){
@@ -80,8 +80,10 @@ void Vofa_Handle_Receive(uint8_t buffer){
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if(huart == &huart2){
-		Vofa_Handle_Receive(RxBuffer);
+		Vofa_Handle_Receive(Uart2_RxBuffer);
+	}else if(huart == &huart1){
+		HC_05_Data_Handle(Uart1_RxBuffer);
 	}
-	
-	StartUartReceiveIT();
+	StartUart1ReceiveIT();
+	StartUart2ReceiveIT();
 }

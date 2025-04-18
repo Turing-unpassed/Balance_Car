@@ -2,6 +2,7 @@
 #define __VOFA_H
 
 #include "usart.h"
+#include "HC_05.h"
 
 enum rxState
 {
@@ -19,7 +20,7 @@ union Vofa_Pid{
 
 void Vofa_Tail();
 void Vofa_SendFloat(float param);
-void StartUartReceiveIT();
+void StartUart2ReceiveIT();
 void Vofa_Handle_Receive(uint8_t buffer);
 
 

@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;../Hardware_L</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;../Hardware/MPU6050;..\Hardware\HC_05</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -428,6 +428,26 @@
               <FileName>OLED.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\OLED.c</FilePath>
+            </File>
+            <File>
+              <FileName>tracking.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Inc\tracking.h</FilePath>
+            </File>
+            <File>
+              <FileName>tracking.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\tracking.c</FilePath>
+            </File>
+            <File>
+              <FileName>Motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\Motor.c</FilePath>
+            </File>
+            <File>
+              <FileName>Motor.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Inc\Motor.h</FilePath>
             </File>
             <File>
               <FileName>main.c</FileName>
@@ -528,32 +548,47 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>Hardware_L</GroupName>
+          <GroupName>MPU6050</GroupName>
           <Files>
             <File>
               <FileName>inv_mpu.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Hardware_L\inv_mpu.c</FilePath>
+              <FilePath>..\Hardware\MPU6050\inv_mpu.c</FilePath>
             </File>
             <File>
               <FileName>inv_mpu_dmp_motion_driver.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Hardware_L\inv_mpu_dmp_motion_driver.c</FilePath>
+              <FilePath>..\Hardware\MPU6050\inv_mpu_dmp_motion_driver.c</FilePath>
             </File>
             <File>
               <FileName>MPU6050.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Hardware_L\MPU6050.c</FilePath>
+              <FilePath>..\Hardware\MPU6050\MPU6050.c</FilePath>
             </File>
             <File>
               <FileName>inv_mpu.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Hardware_L\inv_mpu.h</FilePath>
+              <FilePath>..\Hardware\MPU6050\inv_mpu.h</FilePath>
             </File>
             <File>
               <FileName>MPU6050.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Hardware_L\MPU6050.h</FilePath>
+              <FilePath>..\Hardware\MPU6050\MPU6050.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>HC_05</GroupName>
+          <Files>
+            <File>
+              <FileName>HC_05.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\HC_05\HC_05.c</FilePath>
+            </File>
+            <File>
+              <FileName>HC_05.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Hardware\HC_05\HC_05.h</FilePath>
             </File>
           </Files>
         </Group>

@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include "gpio.h"
 
 typedef enum {
     TWO_WHITE = 0,
