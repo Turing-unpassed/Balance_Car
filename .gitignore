@@ -30,3 +30,5 @@ Release/
 *.swp
 *.log
 *.cache
+
+*.dep

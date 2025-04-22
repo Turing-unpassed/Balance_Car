@@ -196,7 +196,7 @@ void StartMotorCtrl(void const * argument)
     float r_rps,l_rps,r_output,l_output,angle_error,Target_Speed,Target_angle;
     float pitch,roll,yaw;
 
-    PID_parameter_init(&Pitch_pid,0.8,0.004,11,20,10,0);
+    PID_parameter_init(&Pitch_pid,0.8,0.002,11,20,10,0);
     PID_parameter_init(&L_pid_Speed,1420,100,0,10000,5000,0);
     PID_parameter_init(&R_pid_Speed,1420,100,0,10000,5000,0);
     PID_parameter_init(&Angle_pid,0.25,0.003,1,15,15,0);
