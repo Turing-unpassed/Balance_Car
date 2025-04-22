@@ -1,0 +1,32 @@
+# Build and output files
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+*.o
+*.a
+*.axf
+*.srec
+*.pdb
+# IDE generated files
+.project
+.cproject
+.settings/
+Debug/
+Release/
+*.suo
+*.user
+*.uvprojx
+*.uvoptx
+*.ewp
+*.eww
+*.ewd
+*.bat
+*.sh
+# Temporary and cache files
+*.bak
+*.tmp
+*.swp
+*.log
+*.cache
