@@ -31,3 +31,4 @@ balance_car\hc_05.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 balance_car\hc_05.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 balance_car\hc_05.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 balance_car\hc_05.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+balance_car\hc_05.o: D:\keil5\ARM\ARMCC\Bin\..\include\string.h

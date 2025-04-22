@@ -148,3 +148,44 @@ void Pitch_pid_calculation(PID *pp, float Target_speed, float Current_speed)
 	if(pp->output > pp->outputmax )  pp->output = pp->outputmax;
 	if(pp->output < - pp->outputmax )  pp->output = -pp->outputmax; 
 }
+
+void Turn_pid_calculation(PID *pp, float Target_Yaw, float Current_Yaw)
+{
+	
+	pp->LastError = pp->Error;
+	pp->Error = Target_Yaw - Current_Yaw;
+	if(fabsf(pp->Error) < pp->deadzone)
+	{
+		pp->Error = 0;
+	}
+	if(fabsf(pp->Error)>0.2){
+		if(pp->SumError > 1000){
+			if(pp->Error<0){
+				pp->SumError += pp->Error;
+			}
+		}else if(pp->SumError < -1000){
+			if(pp->Error>0){
+				pp->SumError += pp->Error;
+			}
+		}else{
+			pp->SumError += pp->Error;
+		}         
+	}
+	
+	
+	pp->pout = pp->Proportion * pp->Error;
+	pp->iout = pp->Integral * pp->SumError;	
+	pp->dout = pp->Derivative * pp->DError; 
+
+	if(pp->iout>pp->Integralmax){
+		pp->iout=pp->Integralmax ;
+	}else if(pp->iout< -(pp->Integralmax)){
+		pp->iout = -(pp->Integralmax);
+	}
+	
+	pp->output =  pp->iout + pp->pout + pp->dout;
+								
+
+	if(pp->output > pp->outputmax )  pp->output = pp->outputmax;
+	if(pp->output < - pp->outputmax )  pp->output = -pp->outputmax; 
+}

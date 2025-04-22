@@ -193,62 +193,77 @@
         <Ww>
           <count>8</count>
           <WinNumber>1</WinNumber>
-          <ItemText>r_output</ItemText>
+          <ItemText>L_pid_Speed</ItemText>
         </Ww>
         <Ww>
           <count>9</count>
           <WinNumber>1</WinNumber>
-          <ItemText>l_rpm</ItemText>
+          <ItemText>l_output</ItemText>
         </Ww>
         <Ww>
           <count>10</count>
           <WinNumber>1</WinNumber>
-          <ItemText>L_RPM</ItemText>
+          <ItemText>Gyro[3]</ItemText>
         </Ww>
         <Ww>
           <count>11</count>
           <WinNumber>1</WinNumber>
-          <ItemText>L_pid_Speed</ItemText>
+          <ItemText>Gyro_y</ItemText>
         </Ww>
         <Ww>
           <count>12</count>
           <WinNumber>1</WinNumber>
-          <ItemText>l_output</ItemText>
+          <ItemText>Gyro_x</ItemText>
         </Ww>
         <Ww>
           <count>13</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Gyro[3]</ItemText>
+          <ItemText>Gyro_z</ItemText>
         </Ww>
         <Ww>
           <count>14</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Gyro_y</ItemText>
+          <ItemText>Pid_Angle</ItemText>
         </Ww>
         <Ww>
           <count>15</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Gyro_x</ItemText>
+          <ItemText>time2</ItemText>
         </Ww>
         <Ww>
           <count>16</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Gyro_z</ItemText>
+          <ItemText>Pitch_pid</ItemText>
         </Ww>
         <Ww>
           <count>17</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Pid_Angle</ItemText>
+          <ItemText>L_pitch_pid</ItemText>
         </Ww>
         <Ww>
           <count>18</count>
           <WinNumber>1</WinNumber>
-          <ItemText>time2</ItemText>
+          <ItemText>R_pitch_pid</ItemText>
         </Ww>
         <Ww>
           <count>19</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Pitch_pid</ItemText>
+          <ItemText>L_pid_Angle</ItemText>
+        </Ww>
+        <Ww>
+          <count>20</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>R_pid_Angle</ItemText>
+        </Ww>
+        <Ww>
+          <count>21</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>R_RPS</ItemText>
+        </Ww>
+        <Ww>
+          <count>22</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>L_RPS</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>

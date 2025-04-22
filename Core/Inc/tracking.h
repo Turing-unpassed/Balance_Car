@@ -1,3 +1,6 @@
+#ifndef __TRACKING_H
+#define __TRACKING_H
+
 #include <stdbool.h>
 #include "gpio.h"
 
@@ -11,3 +14,5 @@ typedef enum {
 bool if_left_black(void);
 bool if_right_black(void);
 sensor_status get_sensor_status(void);
+
+#endif
