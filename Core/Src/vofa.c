@@ -1,6 +1,8 @@
 #include "vofa.h"
 #include "pid.h"
 
+
+
 extern uint8_t Uart1_RxBuffer;
 uint8_t Uart2_RxBuffer;
 uint8_t i=0;
@@ -8,6 +10,9 @@ union Vofa_Pid vofa_kp,vofa_ki,vofa_kd,vofa_Target;
 uint8_t id;
 
 enum rxState state = WAITING_FOR_HEADER_0;
+
+
+#ifdef VOFA_DEBUG
 
 void Vofa_Tail_Send(){
 	uint8_t tail[4] = {0x00, 0x00, 0x80, 0x7f};
@@ -78,12 +83,19 @@ void Vofa_Handle_Receive(uint8_t buffer){
 	}
 }
 
+#endif
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+#ifdef VOFA_DEBUG
 	if(huart == &huart2){
 		Vofa_Handle_Receive(Uart2_RxBuffer);
-	}else if(huart == &huart1){
+	}
+	StartUart2ReceiveIT();
+
+#endif
+	
+	if(huart == &huart1){
 		HC_05_Data_Handle(Uart1_RxBuffer);
 	}
 	StartUart1ReceiveIT();
-	StartUart2ReceiveIT();
 }

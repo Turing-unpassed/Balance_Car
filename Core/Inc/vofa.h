@@ -8,6 +8,8 @@
 #define VOFA_FRAM_TAIL_0 0x5A
 #define VOFA_FRAM_TAIL_1 0xA5
 
+
+
 enum rxState
 {
     WAITING_FOR_HEADER_0,

@@ -26,5 +26,6 @@ void PID_reset_PID(PID *pp, float Kp, float Ki, float Kd);
 void PID_incremental_PID_calculation(PID *pp, float CurrentPoint, float NextPoint);
 void PID_position_PID_calculation_by_error(PID *pp, float error);
 void Pitch_pid_calculation(PID *pp, float Target_yaw, float Current_yaw);
+void Turn_pid_calculation(PID *pp, float Target_Yaw, float Current_Yaw);
 
 #endif

@@ -117,12 +117,12 @@ void Pitch_pid_calculation(PID *pp, float Target_speed, float Current_speed)
 	{
 		pp->Error = 0;
 	}
-	if(fabsf(pp->Error)>0.2){
-		if(pp->SumError > 1000){
+	if(fabsf(pp->Error)>0.1){
+		if(pp->SumError > 5000){
 			if(pp->Error<0){
 				pp->SumError += pp->Error;
 			}
-		}else if(pp->SumError < -1000){
+		}else if(pp->SumError < -5000){
 			if(pp->Error>0){
 				pp->SumError += pp->Error;
 			}

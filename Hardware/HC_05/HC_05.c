@@ -9,6 +9,7 @@ union Remote_Data_t Remote_Data;
 union HC_05_PID_t HC_05_PID_Temp;
 uint8_t Index,ID;
 uint8_t checksum_temp;
+Control_Model control_model,control_model_temp;
 
 void HC_05_Data_Handle(uint8_t RxBuffer){
     
@@ -24,13 +25,15 @@ void HC_05_Data_Handle(uint8_t RxBuffer){
                 Index = 0;
                 checksum = 0;
 				checksum += ID;
-                HC_05_State = RECEIVING_REMOTE_DATA;
+				control_model_temp = AUTO;
+                HC_05_State = RECEIVING_PID_DATA;			
             }else if(RxBuffer == HC_05_FRAM_ID_1){
                 ID = 1;
                 Index = 0;
                 checksum = 0;
 				checksum += ID;
-                HC_05_State = RECEIVING_PID_DATA;
+				control_model_temp = REMOTE;
+                HC_05_State = RECEIVING_REMOTE_DATA;
             }else{
                 HC_05_State = WAITING_HEADER;
             }
@@ -61,17 +64,39 @@ void HC_05_Data_Handle(uint8_t RxBuffer){
             break;
         case WATING_TAIL:
             if(RxBuffer == HC_05_FRAM_TAIL){
-                if(ID == 0){
+                if(ID == 1){
                     Velocity_Data.Velocity_x = Remote_Data.Data[0];
                     Velocity_Data.Velocity_y = Remote_Data.Data[1];
                     Velocity_Data.Omega = Remote_Data.Data[2];
+				   if(Velocity_Data.Velocity_x==-0.5){
+						Velocity_Data.Velocity_x =0;
+					}
+				   if(Velocity_Data.Velocity_y==-0.5){
+						Velocity_Data.Velocity_y =0;
+					}
+				   if(Velocity_Data.Omega==-0.5){
+						Velocity_Data.Omega =0;
+					}
 					
-                }else if(ID == 1){
+                }else if(ID == 0){
                     HC_05_PID.Data[0] = HC_05_PID_Temp.Data[0];
 					HC_05_PID.Data[1] = HC_05_PID_Temp.Data[1];
 					HC_05_PID.Data[2] = HC_05_PID_Temp.Data[2];
 					HC_05_PID.Data[3] = HC_05_PID_Temp.Data[3];
+					if(HC_05_PID.Data[0]==-0.5){
+						HC_05_PID.Data[0] =0;
+					}
+					if(HC_05_PID.Data[1]==-0.5){
+						HC_05_PID.Data[1] =0;
+					}
+					if(HC_05_PID.Data[2]==-0.5){
+						HC_05_PID.Data[2] =0;
+					}
+					if(HC_05_PID.Data[3]==-0.5){
+						HC_05_PID.Data[3] =0;
+					}
                 }
+				control_model = control_model_temp;
                 HC_05_State = WAITING_HEADER;
             }else{
                 HC_05_State = WAITING_HEADER;

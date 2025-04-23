@@ -35,6 +35,11 @@ union Remote_Data_t{
 	float Data[4];
 };
 
+typedef enum{
+	AUTO=0,
+	REMOTE,
+}Control_Model;
+
 
 void HC_05_Data_Handle(uint8_t RxBuffer);
 void StartUart1ReceiveIT(void);
