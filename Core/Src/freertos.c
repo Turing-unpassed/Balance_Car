@@ -231,11 +231,16 @@ void StartMotorCtrl(void const * argument)
 		target_speed = Target_Speed;
 		target_yaw = Target_Yaw;
 		turn_out2 = Turn_Out;
+		if(target_speed==0){
+			 PID_reset_PID(&Pitch_pid,1.2,0.001,200);
+		}else{
+			PID_reset_PID(&Pitch_pid,0.9,0.002,400);
+		}
 	}else{
 		target_yaw =-1;
 		target_speed = Velocity_Data.Velocity_y/128*3.5;
 		if(target_speed==0){
-			 PID_reset_PID(&Pitch_pid,1,0.0007,200);
+			 PID_reset_PID(&Pitch_pid,1.2,0.001,200);
 		}else{
 			PID_reset_PID(&Pitch_pid,0.9,0.002,400);
 		}
@@ -346,278 +351,320 @@ void Start_Task_Handle(void const * argument)
   sensor_status last_status;
   TASK task;
   uint8_t flag1 = 0,flag2 = 0;
+	uint8_t finish_flag=0;
   for(;;)
   {
 	if(control_model == AUTO){
-		task = get_task();
-		last_status = status;
-		status = get_sensor_status();
-		switch(task){
-		  case task1:
-			switch (status)
-			{
-			case TWO_WHITE:
-			  Target_Speed = 3.5;
-			  Target_Yaw = 0;
-			  Turn_Out = 0;
-			  break;
-			default:
-			  Target_Speed = 0;
-			  break;
-			}
-			break;
-		  case task2:
-			switch (status)
-			{
-			case TWO_WHITE:
-			  Target_Speed = 0;
-			  break;
-			case TWO_BLACK:
-			  Target_Speed = 2;
-			  Target_Yaw = -1;
-			  Turn_Out = -0.3;
-			  break;
-			case L_BLACK_R_WHITE:
-			  Target_Speed = 2;
-			  Target_Yaw = -1;
-			  Turn_Out = 0.5;
-			  break;
-			case L_WHITE_R_BLACK:
-			  Target_Speed = 2;
-			  Target_Yaw = -1;
-			  Turn_Out = -0.5;
-			  break;
-			default:
-			  break;
-			}
-			break;      
-		  case task3:
-			switch (status)
-			{
-			  case TWO_WHITE:
-				if(last_status != TWO_WHITE){
-				  flag1++;
-				  //bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-				}
-				if(flag1 == 0){
-				  Target_Speed = 3.5;
+		if(finish_flag == 0){
+			task = get_task();
+			last_status = status;
+			status = get_sensor_status();
+			switch(task){
+			  case task1:
+				switch (status)
+				{
+				case TWO_WHITE:
+				  Target_Speed = 1.2;
 				  Target_Yaw = 0;
-				}else if(flag1 == 1){
-				  Target_Speed = 3.5;
-				  Target_Yaw = -180;
-				}else{
-				  flag1 = 0;
+				  Turn_Out = 0;
+				  break;
+				default:
 				  Target_Speed = 0;
+				  finish_flag = 1;
+				  break;
 				}
+				break;
+			  case task2:
+				switch (status)
+				{
+				case TWO_WHITE:
+				  Target_Speed = 0.6;
+					if(Yaw<-178&&Yaw<178){
+						Target_Speed = 0;
+						finish_flag = 1;
+					}
+				  
+				  break;
+				case TWO_BLACK:
+				  Target_Speed = 0.8;
+				  Target_Yaw = -1;
+				  Turn_Out = 0;
+				  break;
+				case L_BLACK_R_WHITE:
+				  Target_Speed = 0.5;
+				  Target_Yaw = -1;
+				  Turn_Out = 0.6;
+				  break;
+				case L_WHITE_R_BLACK:
+				  Target_Speed = 0.5;
+				  Target_Yaw = -1;
+				  Turn_Out = -0.6;
+				  break;
+				default:
+				  break;
+				}
+				break;      
+			  case task3:
+				switch (status)
+				{
+				  case TWO_WHITE:
+					if(last_status != TWO_WHITE){
+						Turn_Out = 0;
+					
+						flag1++;
+					 
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+					  
+					}
+					
+
+					if(flag1 == 0){
+					  Turn_Out = 0;
+					  Target_Speed = 0.9;
+					  Target_Yaw = 0;
+					}else if(flag1 == 1){
+					  Turn_Out = 0;
+					  Target_Speed = 1;
+					  Target_Yaw = 178;
+					}else{
+					  Turn_Out = 0;
+					  flag1 = 0;
+					  Target_Speed = 0;
+						
+						finish_flag = 1;
+					
+					  
+					}
+					
+					break;
+				  case TWO_BLACK:
+					if(last_status == TWO_WHITE){
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+					}
+					Target_Speed = 0.8;
+					Target_Yaw = -1;
+					Turn_Out = -0.1;
+					break;
+				  case L_BLACK_R_WHITE:
+					if(last_status == TWO_WHITE){
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+					}
+					Target_Speed = 0.6;
+					Target_Yaw = -1;
+					Turn_Out = 0.6;
+					break;
+				  case L_WHITE_R_BLACK:
+					if(last_status == TWO_WHITE){
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+					}
+					Target_Speed = 0.6;
+					Target_Yaw = -1;
+					Turn_Out = -0.6;
+					
+					break;
+				  default:
+					break;
+				}
+				break;
+			  case task4:
+				switch (status)
+				{
+				case TWO_WHITE:
+				  if(last_status != TWO_WHITE){
+					  Target_Speed = 0.6;
+					  Turn_Out = 0;
+					 
+						Target_Yaw=-35;
+					 
+					if(Yaw>175&&Yaw<-175){
+						Target_Yaw = -140;
+						flag1++;
+					}
+					if(Yaw<5&&Yaw>-5){
+						if(flag1>0){
+							Target_Speed = 0;
+							finish_flag =1;
+						}
+					}
+					
+				  }
+//				  if(flag1 <2){
+//					if(flag1%2 == 0){
+//					  Target_Speed = 0.95;
+//					  Target_Yaw = -37;
+//					}else{
+//					  Target_Speed = 0.95;
+//					  Target_Yaw = -140;
+//					}
+//				  }else if (flag1 ==2)
+//				  {
+//					Target_Speed = 0;
+//					flag1 = 0;
+//					finish_flag = 1;
+//				  }
+				  Turn_Out = 0;
+				  break;
+				case TWO_BLACK:
+				  if(last_status == TWO_WHITE){
+					if((Yaw>-45&&Yaw<-30)&&(Yaw>170&&Yaw<-170)){
+						flag2++;
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+					}
+					
+				  }
+				  if(flag2%2 == 0){
+					Target_Speed = 0.6;
+					Target_Yaw = -1;
+					Turn_Out = -0.2;
+				  }else{
+					Target_Speed = 0.8;
+					Target_Yaw = -1;
+					Turn_Out = 0.2;
+				  }
+				  if(flag2 == 2){
+					flag2 = 0;
+				  }
+				  break;
+				  case L_BLACK_R_WHITE:
+					if((Yaw>-45&&Yaw<-30)&&(Yaw>170&&Yaw<-170)){
+						flag2++;
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+					}
+					Target_Speed = 0.5;
+					Target_Yaw = -1;
+					Turn_Out = 0.7;
+					break;
+				  case L_WHITE_R_BLACK:
+					if((Yaw>-45&&Yaw<-30)&&(Yaw>175&&Yaw<-175)){
+						flag2++;
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+					}
+					Target_Speed = 0.5;
+					Target_Yaw = -1;
+					Turn_Out = -0.7;
+					break;
+				  default:
+					break;
+				}
+				break;
+			  case task5:
+				switch (status)
+				{
+				case TWO_WHITE:
+				  if(last_status != TWO_WHITE){
+					flag1++;
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+				  }
+				  if(flag1 <8){
+					if(flag1%2 == 0){
+					  Target_Speed = 1.5;
+					  Target_Yaw = -38;
+					}else{
+					  Target_Speed = 1.5;
+					  Target_Yaw = 218;
+					}
+				  }else if (flag1 ==8)
+				  {
+					Target_Speed = 0;
+					flag1 = 0;
+					finish_flag = 1;
+				  }
+				  Turn_Out = 0;
+				  break;
+				case TWO_BLACK:
+				  if(last_status == TWO_WHITE){
+					flag2++;
+					HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+				  }
+				  if(flag2%2 == 0){
+					Target_Speed = 0.8;
+					Target_Yaw = -1;
+					Turn_Out = -0.2;
+				  }else{
+					Target_Speed = 0.8;
+					Target_Yaw = -1;
+					Turn_Out = 0.2;
+				  }
+				  break;
+				  case L_BLACK_R_WHITE:
+					if(last_status == TWO_WHITE){
+					  flag2++;
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+					}
+					Target_Speed = 0.6;
+					Target_Yaw = -1;
+					Turn_Out = 0.6;
+					break;
+				  case L_WHITE_R_BLACK:
+					if(last_status == TWO_WHITE){
+					  flag2++;
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_RESET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+					  osDelay(100);
+					  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9,GPIO_PIN_SET);
+					  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+					}
+					Target_Speed = 0.6;
+					Target_Yaw = -1;
+					Turn_Out = -0.6;
+					break;
+				  default:
+					break;
+				}
+				break;
+			  default:
+				Target_Speed = 0;
 				Turn_Out = 0;
-				break;
-			  case TWO_BLACK:
-				if(last_status == TWO_WHITE){
-				  //bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-				}
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = -0.3;
-				break;
-			  case L_BLACK_R_WHITE:
-				if(last_status == TWO_WHITE){
-				  //bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-				}
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = 0.5;
-				break;
-			  case L_WHITE_R_BLACK:
-				if(last_status == TWO_WHITE){
-				  //bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-				}
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = -0.5;
-				break;
-			  default:
+				Target_Yaw = 0;
 				break;
 			}
-			break;
-		  case task4:
-			switch (status)
-			{
-			case TWO_WHITE:
-			  if(last_status != TWO_WHITE){
-				flag1++;
-				//bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-			  }
-			  if(flag1 <2){
-				if(flag1%2 == 0){
-				  Target_Speed = 3.5;
-				  Target_Yaw = 38;
-				}else{
-				  Target_Speed = 3.5;
-				  Target_Yaw = 218;
-				}
-			  }else if (flag1 ==2)
-			  {
-				Target_Speed = 0;
-				flag1 = 0;
-			  }
-			  Turn_Out = 0;
-			  break;
-			case TWO_BLACK:
-			  if(last_status == TWO_WHITE){
-				flag2++;
-				//bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-			  }
-			  if(flag2%2 == 0){
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = -0.3;
-			  }else{
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = 0.3;
-			  }
-			  if(flag2 == 2){
-				flag2 = 0;
-			  }
-			  break;
-			  case L_BLACK_R_WHITE:
-				if(last_status == TWO_WHITE){
-				  flag2++;
-				  //bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-				}
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = 0.5;
-				break;
-			  case L_WHITE_R_BLACK:
-				if(last_status == TWO_WHITE){
-				  flag2++;
-				  //bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-				}
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = -0.5;
-				break;
-			  default:
-				break;
-			}
-			break;
-		  case task5:
-			switch (status)
-			{
-			case TWO_WHITE:
-			  if(last_status != TWO_WHITE){
-				flag1++;
-				//bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-			  }
-			  if(flag1 <8){
-				if(flag1%2 == 0){
-				  Target_Speed = 3.5;
-				  Target_Yaw = 38;
-				}else{
-				  Target_Speed = 3.5;
-				  Target_Yaw = 218;
-				}
-			  }else if (flag1 ==8)
-			  {
-				Target_Speed = 0;
-				flag1 = 0;
-			  }
-			  Turn_Out = 0;
-			  break;
-			case TWO_BLACK:
-			  if(last_status == TWO_WHITE){
-				flag2++;
-				//bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-			  }
-			  if(flag2%2 == 0){
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = -0.3;
-			  }else{
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = 0.3;
-			  }
-			  break;
-			  case L_BLACK_R_WHITE:
-				if(last_status == TWO_WHITE){
-				  flag2++;
-				  //bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-				}
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = 0.5;
-				break;
-			  case L_WHITE_R_BLACK:
-				if(last_status == TWO_WHITE){
-				  flag2++;
-				  //bbbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-				  osDelay(100);
-				  //nobbb
-				  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-				}
-				Target_Speed = 2;
-				Target_Yaw = -1;
-				Turn_Out = -0.5;
-				break;
-			  default:
-				break;
-			}
-			break;
-		  default:
+		}else{
 			Target_Speed = 0;
 			Turn_Out = 0;
-			Target_Yaw = 0;
-			break;
 		}
+		
 	}
-    
+
     osDelay(1);
   }
   /* USER CODE END Start_Task_Handle */

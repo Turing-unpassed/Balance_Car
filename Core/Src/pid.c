@@ -151,12 +151,17 @@ void Pitch_pid_calculation(PID *pp, float Target_speed, float Current_speed)
 
 void Turn_pid_calculation(PID *pp, float Target_Yaw, float Current_Yaw)
 {
-	
+   
 	pp->LastError = pp->Error;
 	pp->Error = Target_Yaw - Current_Yaw;
 	if(fabsf(pp->Error) < pp->deadzone)
 	{
 		pp->Error = 0;
+	}
+	if(pp->Error >180.0f){
+		pp->Error -=360.0f;
+	}else if(pp->Error <-180.0f){
+		pp->Error +=360.0f;
 	}
 	if(fabsf(pp->Error)>0.2){
 		if(pp->SumError > 1000){
